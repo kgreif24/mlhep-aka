@@ -15,12 +15,12 @@ import pandas as pd
 import torch
 
 from idao.data_module import IDAODataModule
-from idao.model import SimpleConv
+from idao.aka_cnn import AkaCnn
 
 def compute_predictions(mode, dataloader, checkpoint_path, cfg):
     torch.multiprocessing.set_sharing_strategy("file_system")
     logging.info("Loading checkpoint")
-    model = SimpleConv.load_from_checkpoint(checkpoint_path, mode=mode)
+    model = AkaCnn.load_from_checkpoint(checkpoint_path, mode=mode)
     model = model.cpu().eval()
 
     dict_pred = defaultdict(list)
@@ -56,13 +56,15 @@ def main():
     dl = dataset_dm.test_dataloader()
 
     dict_pred = defaultdict(list)
-    for mode in ["regression", "classification"]:
-        if mode == "classification":
-            model_path = config["REPORT"]["ClassificationCheckpoint"]
-        else:
-            model_path = config["REPORT"]["RegressionCheckpoint"]
+#     for mode in ["regression", "classification"]:
+#         if mode == "classification":
+#             model_path = config["REPORT"]["ClassificationCheckpoint"]
+#         else:
+#             model_path = config["REPORT"]["RegressionCheckpoint"]
 
-        dict_pred.update(compute_predictions(mode, dl, model_path, cfg=config))
+#         dict_pred.update(compute_predictions(mode, dl, model_path, cfg=config))
+    model_path = config["REPORT"]["ClassificationCheckpoint"]
+    dict_pred.update(compute_predictions("classification", dl, model_path, cfg=config))
 
     data_frame = pd.DataFrame(dict_pred,
                               columns=["id", "energy", "particle"])

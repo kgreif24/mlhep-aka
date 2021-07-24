@@ -50,10 +50,10 @@ class IDAODataModule(pl.LightningDataModule):
         )
 
     def train_dataloader(self):
-        return DataLoader(self.train, self.batch_size, shuffle=True, num_workers=4)
+        return DataLoader(self.train, self.batch_size, shuffle=True, num_workers=5, drop_last=True)
 
     def val_dataloader(self):
-        return DataLoader(self.val, 1, num_workers=0, shuffle=False)
+        return DataLoader(self.val, self.batch_size, num_workers=2, shuffle=False, drop_last=True)
     
     def test_dataloader(self):
         return DataLoader(

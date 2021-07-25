@@ -19,7 +19,7 @@ class AkaCnn(pl.LightningModule):
     Classification is for challenge 1 and regression is for challenge 2.
     """
     
-    def __init__(self, mode: ["classification", "regression"] = "classification", lr=1e-4):
+    def __init__(self, mode: ["classification", "regression"] = "classification", lr=5e-4):
         
         super().__init__()
         self.mode = mode

@@ -42,7 +42,7 @@ def trainer(logger, mode: ["classification", "regression"], cfg, dataset_dm):
     print("Will save checkpoints at ", check_dir)
     checkpoint_callback = ModelCheckpoint(dirpath=check_dir,
                                           monitor='valid_loss',
-                                          mode='max',
+                                          mode='min',
                                           save_top_k=5)
     hist_callback = HistCallback()
         

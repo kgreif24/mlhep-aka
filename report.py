@@ -13,7 +13,7 @@ import torch
 from more_itertools import bucket
 
 from idao.data_module import IDAODataModule
-from idao.model import SimpleConv
+from idao.aka_cnn import AkaCnn
 from idao.utils import delong_roc_variance
 
 
@@ -24,7 +24,7 @@ def test_variance(target, predictions):
 def run_test(mode, dataloader, checkpoint_path, cfg):
     torch.multiprocessing.set_sharing_strategy("file_system")
     logging.info("Loading checkpoint")
-    model = SimpleConv.load_from_checkpoint(checkpoint_path, mode=mode)
+    model = AkaCnn.load_from_checkpoint(checkpoint_path, mode=mode)
     model = model.cpu().eval()
     regression_predictions = []
     classification_predictions = []
@@ -42,7 +42,7 @@ def run_test(mode, dataloader, checkpoint_path, cfg):
             classification_predictions.append(output)
             classification_target.append(class_label)
         else:
-            output = model(img)["energy"].detach()
+            output = model(img).detach()
             regression_predictions.append(output)
             regression_target.append(regression_label)
 
@@ -84,6 +84,7 @@ def run_test(mode, dataloader, checkpoint_path, cfg):
 
         # MAE
         mae = torch.nn.functional.l1_loss(regression_predictions, regression_target)
+        mse = torch.nn.functional.mse_loss(regression_predictions, regression_target)
 
         # plot correlation
         fig, ax = plt.subplots()
@@ -135,7 +136,7 @@ def run_test(mode, dataloader, checkpoint_path, cfg):
                 f'Histogram {k} keV saved at: {cfg["REPORT"]["SaveDir"]}/energy_hist{k}_{i}.png'
             )
 
-        return (mae, None)
+        return (mae, mse, None)
 
 
 def main(cfg):
@@ -149,6 +150,8 @@ def main(cfg):
     dataset_dm.setup()
     dl = dataset_dm.train_dataloader()
     mae = 0
+    mse = 0
+    auc = 999
     variance = 0
 
     for mode in ["regression"]:  # Don't much care about classification anymore
@@ -157,14 +160,17 @@ def main(cfg):
         else:
             model_path = cfg["REPORT"]["RegressionCheckpoint"]
 
-        _mae, _auc = run_test(mode, dl, model_path, cfg=cfg)
+        _mae, _mse, _auc = run_test(mode, dl, model_path, cfg=cfg)
         if _mae is not None:
             mae = _mae
+        if _mse is not None:
+            mse = _mse
         if _auc is not None:
             auc = _auc
 
         gc.collect()
     logging.info(f'MAE = {mae}')
+    logging.info(f'MSE = {mse}')
     logging.info(f'AUC = {auc}')
 
 

@@ -35,7 +35,7 @@ def compute_predictions(mode, dataloader, checkpoint_path, cfg):
             output = model(img)["class"].detach()[:, 1].numpy()
             dict_pred["particle"].extend(output)
         else:
-            output = model(img)["energy"].detach().squeeze(1).numpy()
+            output = model(img).detach().squeeze(1).numpy()
             dict_pred["energy"].extend(output)
             
     return dict_pred
@@ -63,8 +63,9 @@ def main():
 #             model_path = config["REPORT"]["RegressionCheckpoint"]
 
 #         dict_pred.update(compute_predictions(mode, dl, model_path, cfg=config))
-    model_path = config["REPORT"]["ClassificationCheckpoint"]
-    dict_pred.update(compute_predictions("classification", dl, model_path, cfg=config))
+#     model_path = config["REPORT"]["ClassificationCheckpoint"]
+    model_path = config["REPORT"]["RegressionCheckpoint"]
+    dict_pred.update(compute_predictions("regression", dl, model_path, cfg=config))
 
     data_frame = pd.DataFrame(dict_pred,
                               columns=["id", "energy", "particle"])

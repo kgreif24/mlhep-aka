@@ -35,6 +35,7 @@ def compute_predictions(mode, dataloader, checkpoint_path, cfg):
             output = model(img)["class"].detach()[:, 1].numpy()
             dict_pred["particle"].extend(output)
         else:
+            dict_pred["id"].extend(map(lambda x: x.strip('.png'), name))
             output = model(img).detach().squeeze(1).numpy()
             dict_pred["energy"].extend(output)
             

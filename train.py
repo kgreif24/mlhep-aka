@@ -5,6 +5,8 @@ import pytorch_lightning as pl
 from pytorch_lightning.loggers import TensorBoardLogger
 from pytorch_lightning.callbacks import Callback
 from pytorch_lightning.callbacks import ModelCheckpoint
+from pytorch_lightning.callbacks import StochasticWeightAveraging
+from sklearn.model_selection import KFold
 
 from idao.data_module import IDAODataModule
 from idao.aka_cnn import AkaCnn
@@ -41,14 +43,19 @@ def trainer(logger, mode: ["classification", "regression"], cfg, dataset_dm):
     check_dir = "./checkpoints/" + mode + "/" + logger.name + "/version_" + str(logger.version)
     print("Will save checkpoints at ", check_dir)
     checkpoint_callback = ModelCheckpoint(dirpath=check_dir,
+                                          filename='{epoch}-{valid_loss:.2f}',
                                           monitor='valid_loss',
                                           mode='min',
-                                          save_top_k=5)
+                                          save_top_k=5,
+                                          save_last=True)
     hist_callback = HistCallback()
+    swa_callback = StochasticWeightAveraging(swa_epoch_start=50,
+                                             swa_lrs=0.001,
+                                             annealing_epochs=10)
         
     # Build pytorch lightening trainer
     trainer = pl.Trainer(
-        callbacks=[hist_callback, checkpoint_callback],
+        callbacks=[hist_callback, checkpoint_callback], # swa_callback],
         gpus=int(cfg["TRAINING"]["NumGPUs"]),
         max_epochs=int(epochs),
         progress_bar_refresh_rate=1,
@@ -69,9 +76,9 @@ def main():
         data_dir=PATH, batch_size=int(config["TRAINING"]["BatchSize"]), cfg=config
     )
     dataset_dm.prepare_data()
-    dataset_dm.setup()
+    dataset_dm.setup(indeces=None)
     
-    logger = TensorBoardLogger('runs', 'AkaCnn-reg1', log_graph=True)
+    logger = TensorBoardLogger('runs', config["TRAINING"]["Name"], log_graph=True)
     
     # trainer(logger, "classification", cfg=config, dataset_dm=dataset_dm)
     trainer(logger, "regression", cfg=config, dataset_dm=dataset_dm)

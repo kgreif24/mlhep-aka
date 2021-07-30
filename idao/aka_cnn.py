@@ -13,13 +13,21 @@ import torchmetrics as tm
 from torch import nn
 from torch.nn import functional as F
 
+class PrintSize(nn.Module):
+    def __init__(self):
+        super(PrintSize, self).__init__()
+    
+    def forward(self, x):
+        print(x.shape)
+        return x
+
 
 class AkaCnn(pl.LightningModule):
     """ This class defines a CNN. It will have 2 modes, regression and classification.
     Classification is for challenge 1 and regression is for challenge 2.
     """
     
-    def __init__(self, mode: ["classification", "regression"] = "classification", lr=5e-4):
+    def __init__(self, mode: ["classification", "regression"] = "regression", lr=2e-4):
         
         super().__init__()
         self.mode = mode

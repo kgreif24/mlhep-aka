@@ -27,7 +27,7 @@ def trainer(logger, mode: ["classification", "regression"], cfg, dataset_dm):
     """
     
     # Build model
-    model = AkaCnn(mode=mode)
+    model = ResNet()
     
     # Set number of epochs
     if mode == "classification":
@@ -55,7 +55,7 @@ def trainer(logger, mode: ["classification", "regression"], cfg, dataset_dm):
         
     # Build pytorch lightening trainer
     trainer = pl.Trainer(
-        callbacks=[hist_callback, checkpoint_callback], # swa_callback],
+        callbacks=[hist_callback, checkpoint_callback, swa_callback],
         gpus=int(cfg["TRAINING"]["NumGPUs"]),
         max_epochs=int(epochs),
         progress_bar_refresh_rate=1,
